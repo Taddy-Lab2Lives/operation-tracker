@@ -472,6 +472,11 @@ body {
     color: white;
 }
 
+.task-badge.delay {
+    background: var(--danger-color);
+    color: white;
+}
+
 /* No Edit Card */
 .task-card.no-edit {
     opacity: 0.7;

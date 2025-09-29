@@ -223,10 +223,6 @@ function renderKanban() {
         if (element) element.innerHTML = '';
     });
     
-    // Get current date for delay calculation
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
     // Render tasks
     appData.tasks.forEach(task => {
         if (currentFilter !== 'all' && task.projectName !== currentFilter) return;
@@ -234,21 +230,20 @@ function renderKanban() {
         // Determine which column to show the task in based on status
         let columnId = null;
         
-        // Logic for new 4-column layout with delay detection
+        // Logic for new 4-column layout with explicit status
+        // Prioritize actual status over planning status
         if (task.actualStatus === 'done') {
             columnId = 'done-actual';
-        } else if (task.actualStatus === 'in-progress' || task.planningStatus === 'in-progress') {
+        } else if (task.actualStatus === 'in-progress') {
             columnId = 'in-progress-mixed';
-        } else {
-            // Check if task is delayed (plan date is today or past, but not in progress yet)
-            const planEndDate = new Date(task.planDateTo || task.planDateFrom || task.planDate);
-            planEndDate.setHours(0, 0, 0, 0);
-            
-            if (planEndDate <= today && (task.planningStatus === 'todo' || task.actualStatus === 'todo')) {
-                columnId = 'delay-tasks';
-            } else if (task.planningStatus === 'todo' || task.actualStatus === 'todo') {
-                columnId = 'todo-planned';
-            }
+        } else if (task.actualStatus === 'delay') {
+            columnId = 'delay-tasks';
+        } else if (task.planningStatus === 'in-progress') {
+            columnId = 'in-progress-mixed';
+        } else if (task.planningStatus === 'delay') {
+            columnId = 'delay-tasks';
+        } else if (task.planningStatus === 'todo' || task.actualStatus === 'todo') {
+            columnId = 'todo-planned';
         }
         
         if (columnId) {
@@ -275,13 +270,19 @@ function createTaskCard(task, columnType) {
     const status = calculateTaskStatus(task);
     const isInProgress = columnType === 'in-progress-mixed';
     
-    // Determine badge type for In Progress column
+    // Determine badge type for different columns
     let badgeHtml = '';
     if (isInProgress) {
         if (task.actualStatus === 'in-progress') {
             badgeHtml = '<div class="task-badge actual">Actual Progress</div>';
         } else if (task.planningStatus === 'in-progress') {
             badgeHtml = '<div class="task-badge plan">Plan Progress</div>';
+        }
+    } else if (columnType === 'delay-tasks') {
+        if (task.actualStatus === 'delay') {
+            badgeHtml = '<div class="task-badge actual">Actual Delay</div>';
+        } else if (task.planningStatus === 'delay') {
+            badgeHtml = '<div class="task-badge plan">Plan Delay</div>';
         }
     }
     
