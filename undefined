@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "lastUpdated": "2025-09-29T08:03:45.458Z",
+  "lastUpdated": "2025-09-29T08:04:17.049Z",
   "users": [
     {
       "id": 1,
@@ -58,16 +58,20 @@
       "id": "task-002",
       "projectName": "3Sạch",
       "taskName": "Lắp thiết bị đo 7 days health check cho De La Sol",
-      "description": "",
+      "description": null,
       "assignee": 1,
       "planDate": "2025-09-29",
       "actualDate": null,
       "planningStatus": "in-progress",
-      "actualStatus": "in-progress",
+      "actualStatus": "delay",
       "priority": "normal",
       "createdAt": "2025-09-23T10:00:00Z",
       "createdBy": 1,
-      "updatedAt": "2025-09-28T09:00:00Z"
+      "updatedAt": "2025-09-29T08:04:17.049Z",
+      "planDateFrom": "2025-09-29",
+      "planDateTo": "2025-09-29",
+      "actualDateFrom": null,
+      "actualDateTo": null
     },
     {
       "id": "task-003",
@@ -341,5 +345,80 @@
     }
   ],
   "requests": [],
-  "history": []
+  "history": [
+    {
+      "id": "1759133057049-bjhhqg8y7",
+      "taskId": "task-002",
+      "userId": 1,
+      "action": "updated",
+      "timestamp": "2025-09-29T08:04:17.049Z",
+      "changes": {
+        "field": "description",
+        "oldValue": "",
+        "newValue": null
+      },
+      "reason": "delay"
+    },
+    {
+      "id": "1759133057049-bigbtyq27",
+      "taskId": "task-002",
+      "userId": 1,
+      "action": "updated",
+      "timestamp": "2025-09-29T08:04:17.049Z",
+      "changes": {
+        "field": "planDateFrom",
+        "newValue": "2025-09-29"
+      },
+      "reason": "delay"
+    },
+    {
+      "id": "1759133057049-lwjj5jdm6",
+      "taskId": "task-002",
+      "userId": 1,
+      "action": "updated",
+      "timestamp": "2025-09-29T08:04:17.049Z",
+      "changes": {
+        "field": "planDateTo",
+        "newValue": "2025-09-29"
+      },
+      "reason": "delay"
+    },
+    {
+      "id": "1759133057049-7qrxw4yhi",
+      "taskId": "task-002",
+      "userId": 1,
+      "action": "updated",
+      "timestamp": "2025-09-29T08:04:17.049Z",
+      "changes": {
+        "field": "actualDateFrom",
+        "newValue": null
+      },
+      "reason": "delay"
+    },
+    {
+      "id": "1759133057049-dcnmz89e1",
+      "taskId": "task-002",
+      "userId": 1,
+      "action": "updated",
+      "timestamp": "2025-09-29T08:04:17.049Z",
+      "changes": {
+        "field": "actualDateTo",
+        "newValue": null
+      },
+      "reason": "delay"
+    },
+    {
+      "id": "1759133057049-v1owi49hx",
+      "taskId": "task-002",
+      "userId": 1,
+      "action": "updated",
+      "timestamp": "2025-09-29T08:04:17.049Z",
+      "changes": {
+        "field": "actualStatus",
+        "oldValue": "in-progress",
+        "newValue": "delay"
+      },
+      "reason": "delay"
+    }
+  ]
 }
