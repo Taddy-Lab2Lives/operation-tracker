@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Operation Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Connection Status Banner -->
+    <div id="connectionStatus" class="connection-status">
+        <span class="status-indicator"></span>
+        <span class="status-text">Checking connection...</span>
+    </div>
+
+    <!-- Warning Banner for Local Mode -->
+    <div id="localModeWarning" class="warning-banner" style="display: none;">
+        ⚠️ Running in LOCAL MODE - Changes won't sync across devices.
+        <a href="#" onclick="openSettings()">Configure GitHub</a> to enable sync.
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <h1>Operation Tracker</h1>
+            <div class="connection-indicator">
+                <span id="connectionDot" class="status-dot"></span>
+                <span id="connectionText">Connecting...</span>
+            </div>
+        </div>
+        <div class="header-right">
+            <button id="refreshBtn" class="btn btn-secondary" onclick="refreshData()">
+                <span class="refresh-icon">↻</span> Refresh
+            </button>
+            <button id="syncBtn" class="btn btn-primary" onclick="syncNow()" style="display: none;">
+                <span class="sync-icon">⇅</span> Sync Now
+            </button>
+            <select id="userSelector" class="user-selector" onchange="changeUser()">
+                <option value="">Select User</option>
+                <option value="1">Liam (Tech Lead)</option>
+                <option value="2">Trân (Sales Lead)</option>
+                <option value="3">Taddy (CEO)</option>
+                <option value="4">Hiếu (Software Lead)</option>
+                <option value="5">Vỹ (UX Lead)</option>
+                <option value="6">Intern Thân (Tech Intern)</option>
+                <option value="7">Intern Trân (Tech Intern)</option>
+            </select>
+            <button id="settingsBtn" class="btn btn-icon" onclick="openSettings()" title="Settings">
+                ⚙️
+            </button>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="nav-tabs">
+        <button class="nav-tab active" onclick="switchTab('dashboard')">Dashboard</button>
+        <button class="nav-tab" onclick="switchTab('kanban')">Kanban Board</button>
+        <button class="nav-tab" onclick="switchTab('requests')">Requests</button>
+        <button class="nav-tab" onclick="switchTab('history')">History</button>
+    </nav>
+
+    <!-- Dashboard View -->
+    <div id="dashboardView" class="view active">
+        <div class="dashboard-cards">
+            <div class="dashboard-card">
+                <div class="card-value" id="totalTasks">0</div>
+                <div class="card-label">Total Tasks</div>
+            </div>
+            <div class="dashboard-card success">
+                <div class="card-value" id="onTimeTasks">0</div>
+                <div class="card-label">On Time</div>
+            </div>
+            <div class="dashboard-card warning">
+                <div class="card-value" id="delayedTasks">0</div>
+                <div class="card-label">Delayed</div>
+            </div>
+            <div class="dashboard-card danger">
+                <div class="card-value" id="criticalTasks">0</div>
+                <div class="card-label">Critical/Blocked</div>
+            </div>
+            <div class="dashboard-card info">
+                <div class="card-value" id="pendingRequests">0</div>
+                <div class="card-label">Pending Requests</div>
+            </div>
+        </div>
+
+        <!-- Project Filter -->
+        <div class="project-filter">
+            <button class="filter-btn active" onclick="filterProject('all')">All</button>
+            <button class="filter-btn" onclick="filterProject('3Sạch')">3Sạch</button>
+            <button class="filter-btn" onclick="filterProject('Wincommerce')">Wincommerce</button>
+            <button class="filter-btn" onclick="filterProject('Kingfoodmart')">Kingfoodmart</button>
+            <button class="filter-btn" onclick="filterProject('Maxidi')">Maxidi</button>
+            <button class="filter-btn" onclick="filterProject('Sản xuất')">Sản xuất</button>
+            <button class="filter-btn" onclick="filterProject('Quy trình')">Quy trình</button>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <button id="createTaskBtn" class="btn btn-primary" onclick="openCreateTaskModal()">
+                + Create Task
+            </button>
+            <button id="createRequestBtn" class="btn btn-secondary" onclick="openCreateRequestModal()">
+                + Create Request
+            </button>
+            <button class="btn btn-secondary" onclick="exportData()">
+                ⬇ Export Data
+            </button>
+            <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">
+                ⬆ Import Data
+            </button>
+            <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(event)">
+        </div>
+    </div>
+
+    <!-- Kanban Board View -->
+    <div id="kanbanView" class="view">
+        <div class="kanban-header">
+            <h2>Planning Board</h2>
+            <h2>Actual Progress</h2>
+        </div>
+        <div class="kanban-container">
+            <div class="kanban-board planning-board">
+                <div class="kanban-column" data-status="todo" data-type="planning">
+                    <div class="column-header">To Do (Planned)</div>
+                    <div class="column-content" id="planning-todo"></div>
+                </div>
+                <div class="kanban-column" data-status="in-progress" data-type="planning">
+                    <div class="column-header">In Progress (Planned)</div>
+                    <div class="column-content" id="planning-in-progress"></div>
+                </div>
+                <div class="kanban-column" data-status="done" data-type="planning">
+                    <div class="column-header">Done (Planned)</div>
+                    <div class="column-content" id="planning-done"></div>
+                </div>
+            </div>
+            <div class="kanban-board actual-board">
+                <div class="kanban-column" data-status="todo" data-type="actual">
+                    <div class="column-header">To Do (Actual)</div>
+                    <div class="column-content" id="actual-todo"></div>
+                </div>
+                <div class="kanban-column" data-status="in-progress" data-type="actual">
+                    <div class="column-header">In Progress (Actual)</div>
+                    <div class="column-content" id="actual-in-progress"></div>
+                </div>
+                <div class="kanban-column" data-status="done" data-type="actual">
+                    <div class="column-header">Done (Actual)</div>
+                    <div class="column-content" id="actual-done"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Requests View -->
+    <div id="requestsView" class="view">
+        <div class="requests-header">
+            <h2>Request Management</h2>
+            <button class="btn btn-primary" onclick="openCreateRequestModal()">+ New Request</button>
+        </div>
+        <div id="requestsList" class="requests-list"></div>
+    </div>
+
+    <!-- History View -->
+    <div id="historyView" class="view">
+        <div class="history-header">
+            <h2>History Log</h2>
+            <div class="history-filters">
+                <select id="historyProjectFilter" onchange="filterHistory()">
+                    <option value="">All Projects</option>
+                    <option value="3Sạch">3Sạch</option>
+                    <option value="Wincommerce">Wincommerce</option>
+                    <option value="Kingfoodmart">Kingfoodmart</option>
+                    <option value="Maxidi">Maxidi</option>
+                    <option value="Sản xuất">Sản xuất</option>
+                    <option value="Quy trình">Quy trình</option>
+                </select>
+                <select id="historyUserFilter" onchange="filterHistory()">
+                    <option value="">All Users</option>
+                </select>
+                <input type="date" id="historyDateFrom" onchange="filterHistory()">
+                <input type="date" id="historyDateTo" onchange="filterHistory()">
+                <button class="btn btn-secondary" onclick="exportHistory()">Export CSV</button>
+            </div>
+        </div>
+        <div id="historyTable" class="history-table"></div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>GitHub Configuration</h2>
+                <button class="close-btn" onclick="closeSettings()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Repository Owner:</label>
+                    <input type="text" id="githubOwner" placeholder="YOUR_GITHUB_USERNAME">
+                </div>
+                <div class="form-group">
+                    <label>Repository Name:</label>
+                    <input type="text" id="githubRepo" placeholder="operation-tracker">
+                </div>
+                <div class="form-group">
+                    <label>Branch:</label>
+                    <input type="text" id="githubBranch" placeholder="main" value="main">
+                </div>
+                <div class="form-group">
+                    <label>Personal Access Token:</label>
+                    <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxx">
+                    <small>Requires repo write access</small>
+                </div>
+                <div class="settings-actions">
+                    <button class="btn btn-secondary" onclick="testGitHubConnection()">Test Connection</button>
+                    <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+                </div>
+                <div id="settingsStatus" class="settings-status"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Task Modal -->
+    <div id="createTaskModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create New Task</h2>
+                <button class="close-btn" onclick="closeCreateTaskModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Project:</label>
+                    <select id="taskProject" required>
+                        <option value="">Select Project</option>
+                        <option value="3Sạch">3Sạch</option>
+                        <option value="Wincommerce">Wincommerce</option>
+                        <option value="Kingfoodmart">Kingfoodmart</option>
+                        <option value="Maxidi">Maxidi</option>
+                        <option value="Sản xuất">Sản xuất</option>
+                        <option value="Quy trình">Quy trình</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Task Name:</label>
+                    <input type="text" id="taskName" required>
+                </div>
+                <div class="form-group">
+                    <label>Description:</label>
+                    <textarea id="taskDescription" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Assignee:</label>
+                    <select id="taskAssignee" required>
+                        <option value="">Select Assignee</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Plan Date:</label>
+                    <input type="date" id="taskPlanDate" required>
+                </div>
+                <div class="form-group">
+                    <label>Planning Status:</label>
+                    <select id="taskPlanningStatus">
+                        <option value="todo">To Do</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="done">Done</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Priority:</label>
+                    <select id="taskPriority">
+                        <option value="normal">Normal</option>
+                        <option value="blocked">Blocked</option>
+                        <option value="critical">Critical</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Reason for Creation:</label>
+                    <textarea id="taskReason" required rows="2"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-secondary" onclick="closeCreateTaskModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="createTask()">Create Task</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Task Modal -->
+    <div id="editTaskModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit Task</h2>
+                <button class="close-btn" onclick="closeEditTaskModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editTaskId">
+                <div class="form-group">
+                    <label>Project:</label>
+                    <select id="editTaskProject">
+                        <option value="3Sạch">3Sạch</option>
+                        <option value="Wincommerce">Wincommerce</option>
+                        <option value="Kingfoodmart">Kingfoodmart</option>
+                        <option value="Maxidi">Maxidi</option>
+                        <option value="Sản xuất">Sản xuất</option>
+                        <option value="Quy trình">Quy trình</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Task Name:</label>
+                    <input type="text" id="editTaskName">
+                </div>
+                <div class="form-group">
+                    <label>Description:</label>
+                    <textarea id="editTaskDescription" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Assignee:</label>
+                    <select id="editTaskAssignee"></select>
+                </div>
+                <div class="form-group">
+                    <label>Plan Date:</label>
+                    <input type="date" id="editTaskPlanDate">
+                </div>
+                <div class="form-group">
+                    <label>Actual Date:</label>
+                    <input type="date" id="editTaskActualDate">
+                </div>
+                <div class="form-group">
+                    <label>Planning Status:</label>
+                    <select id="editTaskPlanningStatus">
+                        <option value="todo">To Do</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="done">Done</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Actual Status:</label>
+                    <select id="editTaskActualStatus">
+                        <option value="todo">To Do</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="done">Done</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Priority:</label>
+                    <select id="editTaskPriority">
+                        <option value="normal">Normal</option>
+                        <option value="blocked">Blocked</option>
+                        <option value="critical">Critical</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Reason for Update:</label>
+                    <textarea id="editTaskReason" required rows="2"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-secondary" onclick="closeEditTaskModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="updateTask()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Request Modal -->
+    <div id="createRequestModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create New Request</h2>
+                <button class="close-btn" onclick="closeCreateRequestModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Request Type:</label>
+                    <select id="requestType" required>
+                        <option value="">Select Type</option>
+                        <option value="change-deadline">Change Deadline</option>
+                        <option value="add-task">Add Task</option>
+                        <option value="customer-info">Customer Info</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Related Task (Optional):</label>
+                    <select id="requestTask">
+                        <option value="">None</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Customer Info:</label>
+                    <textarea id="requestCustomerInfo" required rows="2"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Description:</label>
+                    <textarea id="requestDescription" required rows="3"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-secondary" onclick="closeCreateRequestModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="createRequest()">Submit Request</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Passcode Modal -->
+    <div id="passcodeModal" class="modal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>Admin Authentication Required</h2>
+                <button class="close-btn" onclick="closePasscodeModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Enter Admin Passcode:</label>
+                    <input type="password" id="adminPasscode" placeholder="Enter passcode">
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-secondary" onclick="closePasscodeModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="verifyPasscode()">Verify</button>
+                </div>
+                <div id="passcodeError" class="error-message"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <p>Syncing with GitHub...</p>
+    </div>
+
+    <script src="github-api.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
