@@ -230,21 +230,28 @@ function renderKanban() {
         // Determine which column to show the task in based on status
         let columnId = null;
         
-        // Logic for new 4-column layout
-        if (task.planningStatus === 'today') {
-            columnId = 'today-planned';
-        } else if (task.planningStatus === 'in-progress') {
-            columnId = 'in-progress-planned';
+        // Logic for new 4-column layout - prioritize actual status over planning
+        if (task.actualStatus === 'done') {
+            columnId = 'done-actual';
         } else if (task.actualStatus === 'in-progress') {
             columnId = 'in-progress-actual';
-        } else if (task.actualStatus === 'done') {
-            columnId = 'done-actual';
+            console.log(`Task ${task.taskName} assigned to in-progress-actual`);
+        } else if (task.planningStatus === 'in-progress') {
+            columnId = 'in-progress-planned';
+        } else if (task.planningStatus === 'today') {
+            columnId = 'today-planned';
         }
         
         if (columnId) {
             const card = createTaskCard(task, columnId);
             const column = document.getElementById(columnId);
-            if (column) column.appendChild(card);
+            if (column) {
+                column.appendChild(card);
+            } else {
+                console.error(`Column not found: ${columnId}`);
+            }
+        } else {
+            console.log(`No column found for task: ${task.taskName}, planning: ${task.planningStatus}, actual: ${task.actualStatus}`);
         }
     });
 }
