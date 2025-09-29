@@ -125,8 +125,8 @@ class GitHubAPI {
             const data = await response.json();
             this.currentSHA = data.sha;
             
-            // Decode base64 content
-            const content = atob(data.content);
+            // Decode base64 content with UTF-8 support
+            const content = this.base64ToUtf8(data.content);
             const jsonData = JSON.parse(content);
             
             // Save to local storage as backup
@@ -155,8 +155,8 @@ class GitHubAPI {
             // Update timestamp
             data.lastUpdated = new Date().toISOString();
             
-            // Prepare content
-            const content = btoa(JSON.stringify(data, null, 2));
+            // Prepare content with UTF-8 support
+            const content = this.utf8ToBase64(JSON.stringify(data, null, 2));
             
             const body = {
                 message: commitMessage,
@@ -438,6 +438,50 @@ class GitHubAPI {
             reader.onerror = reject;
             reader.readAsText(file);
         });
+    }
+
+    // UTF-8 to Base64 conversion (handles Unicode characters)
+    utf8ToBase64(str) {
+        try {
+            // Use TextEncoder for proper UTF-8 encoding
+            const encoder = new TextEncoder();
+            const bytes = encoder.encode(str);
+            
+            // Convert bytes to binary string
+            let binary = '';
+            for (let i = 0; i < bytes.length; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            
+            // Convert to base64
+            return btoa(binary);
+        } catch (error) {
+            console.error('UTF-8 to Base64 encoding error:', error);
+            // Fallback to simple btoa (may fail with Unicode)
+            return btoa(str);
+        }
+    }
+
+    // Base64 to UTF-8 conversion (handles Unicode characters)
+    base64ToUtf8(base64) {
+        try {
+            // Decode base64 to binary string
+            const binary = atob(base64);
+            
+            // Convert binary string to bytes
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) {
+                bytes[i] = binary.charCodeAt(i);
+            }
+            
+            // Use TextDecoder for proper UTF-8 decoding
+            const decoder = new TextDecoder();
+            return decoder.decode(bytes);
+        } catch (error) {
+            console.error('Base64 to UTF-8 decoding error:', error);
+            // Fallback to simple atob
+            return atob(base64);
+        }
     }
 
     // Check online status
