@@ -215,7 +215,7 @@ function renderKanban() {
     
     // Clear all columns
     const columns = [
-        'today-planned', 'in-progress-planned', 'in-progress-actual', 'done-actual'
+        'today-planned', 'in-progress-mixed', 'done-actual'
     ];
     
     columns.forEach(col => {
@@ -230,14 +230,11 @@ function renderKanban() {
         // Determine which column to show the task in based on status
         let columnId = null;
         
-        // Logic for new 4-column layout - prioritize actual status over planning
+        // Logic for new 3-column layout
         if (task.actualStatus === 'done') {
             columnId = 'done-actual';
-        } else if (task.actualStatus === 'in-progress') {
-            columnId = 'in-progress-actual';
-            console.log(`Task ${task.taskName} assigned to in-progress-actual`);
-        } else if (task.planningStatus === 'in-progress') {
-            columnId = 'in-progress-planned';
+        } else if (task.actualStatus === 'in-progress' || task.planningStatus === 'in-progress') {
+            columnId = 'in-progress-mixed';
         } else if (task.planningStatus === 'today') {
             columnId = 'today-planned';
         }
@@ -264,8 +261,17 @@ function createTaskCard(task, columnType) {
     card.dataset.columnType = columnType;
     
     const status = calculateTaskStatus(task);
-    const isActualProgress = columnType === 'in-progress-actual';
-    const isNoEdit = columnType === 'in-progress-planned';
+    const isInProgress = columnType === 'in-progress-mixed';
+    
+    // Determine badge type for In Progress column
+    let badgeHtml = '';
+    if (isInProgress) {
+        if (task.actualStatus === 'in-progress') {
+            badgeHtml = '<div class="task-badge actual">Actual Progress</div>';
+        } else if (task.planningStatus === 'in-progress') {
+            badgeHtml = '<div class="task-badge plan">Plan Progress</div>';
+        }
+    }
     
     // Format date ranges
     const planDateRange = formatDateRange(task.planDateFrom, task.planDateTo);
@@ -276,7 +282,7 @@ function createTaskCard(task, columnType) {
             <span class="task-status-icon ${status}"></span>
             <span class="task-name">${escapeHtml(task.taskName)}</span>
         </div>
-        ${isActualProgress ? '<div class="task-badge">Actual Progress</div>' : ''}
+        ${badgeHtml}
         <div class="task-project">Project: ${task.projectName}</div>
         <div class="task-assignee">Assignee: ${getUserName(task.assignee)}</div>
         <div class="task-dates">
@@ -285,15 +291,10 @@ function createTaskCard(task, columnType) {
         </div>
         <div class="task-actions">
             <button class="btn btn-secondary" onclick="viewTaskHistory('${task.id}')">History</button>
-            ${currentUser && currentUser.role === 'Tech Lead' && !isNoEdit ? 
+            ${currentUser && currentUser.role === 'Tech Lead' ? 
                 `<button class="btn btn-primary task-edit-btn" onclick="openEditTaskModal('${task.id}')">Edit</button>` : ''}
         </div>
     `;
-    
-    // Add no-edit class if it's the planned in-progress column
-    if (isNoEdit) {
-        card.classList.add('no-edit');
-    }
     
     return card;
 }

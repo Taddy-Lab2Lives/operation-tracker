@@ -319,10 +319,10 @@ body {
 
 .kanban-board {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 16px;
     width: 100%;
-    max-width: 1400px;
+    max-width: 1200px;
 }
 
 .kanban-column {
@@ -450,6 +450,16 @@ body {
     text-align: center;
     margin-bottom: 6px;
     font-weight: 600;
+}
+
+.task-badge.plan {
+    background: var(--warning-color);
+    color: var(--dark-color);
+}
+
+.task-badge.actual {
+    background: var(--success-color);
+    color: white;
 }
 
 /* No Edit Card */
@@ -882,7 +892,7 @@ body {
 /* Responsive Design */
 @media (max-width: 1024px) {
     .kanban-board {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(3, 1fr);
         gap: 12px;
     }
 }
