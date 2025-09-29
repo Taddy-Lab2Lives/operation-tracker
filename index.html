@@ -117,9 +117,13 @@
     <div id="kanbanView" class="view">
         <div class="kanban-container">
             <div class="kanban-board">
-                <div class="kanban-column" data-status="today" data-type="planned">
-                    <div class="column-header">Today</div>
-                    <div class="column-content" id="today-planned"></div>
+                <div class="kanban-column" data-status="todo" data-type="planned">
+                    <div class="column-header">Todo</div>
+                    <div class="column-content" id="todo-planned"></div>
+                </div>
+                <div class="kanban-column delay" data-status="delay" data-type="delayed">
+                    <div class="column-header">Delay</div>
+                    <div class="column-content" id="delay-tasks"></div>
                 </div>
                 <div class="kanban-column editable" data-status="in-progress" data-type="mixed">
                     <div class="column-header">In Progress</div>
@@ -246,7 +250,7 @@
                 <div class="form-group">
                     <label>Planning Status:</label>
                     <select id="taskPlanningStatus">
-                        <option value="today">Today</option>
+                        <option value="todo">Todo</option>
                         <option value="in-progress">In Progress</option>
                         <option value="done">Done</option>
                     </select>
@@ -254,7 +258,7 @@
                 <div class="form-group">
                     <label>Actual Status:</label>
                     <select id="taskActualStatus">
-                        <option value="today">Today</option>
+                        <option value="todo">Todo</option>
                         <option value="in-progress">In Progress</option>
                         <option value="done">Done</option>
                     </select>
@@ -330,7 +334,7 @@
                 <div class="form-group">
                     <label>Planning Status:</label>
                     <select id="editTaskPlanningStatus">
-                        <option value="today">Today</option>
+                        <option value="todo">Todo</option>
                         <option value="in-progress">In Progress</option>
                         <option value="done">Done</option>
                     </select>
@@ -338,7 +342,7 @@
                 <div class="form-group">
                     <label>Actual Status:</label>
                     <select id="editTaskActualStatus">
-                        <option value="today">Today</option>
+                        <option value="todo">Todo</option>
                         <option value="in-progress">In Progress</option>
                         <option value="done">Done</option>
                     </select>

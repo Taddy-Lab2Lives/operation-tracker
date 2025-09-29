@@ -215,13 +215,17 @@ function renderKanban() {
     
     // Clear all columns
     const columns = [
-        'today-planned', 'in-progress-mixed', 'done-actual'
+        'todo-planned', 'delay-tasks', 'in-progress-mixed', 'done-actual'
     ];
     
     columns.forEach(col => {
         const element = document.getElementById(col);
         if (element) element.innerHTML = '';
     });
+    
+    // Get current date for delay calculation
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     
     // Render tasks
     appData.tasks.forEach(task => {
@@ -230,13 +234,21 @@ function renderKanban() {
         // Determine which column to show the task in based on status
         let columnId = null;
         
-        // Logic for new 3-column layout
+        // Logic for new 4-column layout with delay detection
         if (task.actualStatus === 'done') {
             columnId = 'done-actual';
         } else if (task.actualStatus === 'in-progress' || task.planningStatus === 'in-progress') {
             columnId = 'in-progress-mixed';
-        } else if (task.planningStatus === 'today') {
-            columnId = 'today-planned';
+        } else {
+            // Check if task is delayed (plan date is today or past, but not in progress yet)
+            const planEndDate = new Date(task.planDateTo || task.planDateFrom || task.planDate);
+            planEndDate.setHours(0, 0, 0, 0);
+            
+            if (planEndDate <= today && (task.planningStatus === 'todo' || task.actualStatus === 'todo')) {
+                columnId = 'delay-tasks';
+            } else if (task.planningStatus === 'todo' || task.actualStatus === 'todo') {
+                columnId = 'todo-planned';
+            }
         }
         
         if (columnId) {
@@ -363,8 +375,8 @@ function clearTaskForm() {
     document.getElementById('taskAssignee').value = '';
     document.getElementById('taskPlanDateFrom').value = '';
     document.getElementById('taskPlanDateTo').value = '';
-    document.getElementById('taskPlanningStatus').value = 'today';
-    document.getElementById('taskActualStatus').value = 'today';
+    document.getElementById('taskPlanningStatus').value = 'todo';
+    document.getElementById('taskActualStatus').value = 'todo';
     document.getElementById('taskPriority').value = 'normal';
     document.getElementById('taskReason').value = '';
 }
