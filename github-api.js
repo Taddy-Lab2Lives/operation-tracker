@@ -125,8 +125,28 @@ class GitHubAPI {
             const data = await response.json();
             this.currentSHA = data.sha;
             
-            // Decode base64 content with UTF-8 support
-            const content = this.base64ToUtf8(data.content);
+            // Decode base64 content with multiple methods
+            let content;
+            try {
+                // Try UTF-8 decoding first
+                content = this.base64ToUtf8(data.content);
+                console.log('Using UTF-8 decoding for GitHub fetch');
+            } catch (utf8Error) {
+                console.warn('UTF-8 decoding failed, trying URL decode method:', utf8Error);
+                try {
+                    // Try URL decode method
+                    const decoded = atob(data.content);
+                    content = decodeURIComponent(decoded);
+                    console.log('Using URL decode method');
+                } catch (urlError) {
+                    console.warn('URL decode method failed, using unescape method:', urlError);
+                    // Try escape method
+                    const decoded = atob(data.content);
+                    content = unescape(decoded);
+                    console.log('Using unescape method');
+                }
+            }
+            
             const jsonData = JSON.parse(content);
             
             // Save to local storage as backup
@@ -155,8 +175,29 @@ class GitHubAPI {
             // Update timestamp
             data.lastUpdated = new Date().toISOString();
             
-            // Prepare content with UTF-8 support
-            const content = this.utf8ToBase64(JSON.stringify(data, null, 2));
+            // Prepare content with multiple encoding attempts
+            let content;
+            try {
+                // Try UTF-8 encoding first
+                content = this.utf8ToBase64(JSON.stringify(data, null, 2));
+                console.log('Using UTF-8 encoding for GitHub commit');
+            } catch (utf8Error) {
+                console.warn('UTF-8 encoding failed, trying URL encode method:', utf8Error);
+                try {
+                    // Alternative method: URL encode then base64
+                    const jsonString = JSON.stringify(data, null, 2);
+                    const encoded = encodeURIComponent(jsonString);
+                    content = btoa(encoded);
+                    console.log('Using URL encode + base64 method');
+                } catch (urlError) {
+                    console.warn('URL encode method failed, using escape method:', urlError);
+                    // Last resort: escape special characters
+                    const jsonString = JSON.stringify(data, null, 2);
+                    const escaped = escape(jsonString);
+                    content = btoa(escaped);
+                    console.log('Using escape + base64 method');
+                }
+            }
             
             const body = {
                 message: commitMessage,
@@ -168,6 +209,12 @@ class GitHubAPI {
             if (this.currentSHA) {
                 body.sha = this.currentSHA;
             }
+            
+            console.log('Attempting GitHub commit with body:', {
+                message: body.message,
+                contentLength: content.length,
+                hasSha: !!body.sha
+            });
             
             const response = await fetch(url, {
                 method: 'PUT',
@@ -181,11 +228,12 @@ class GitHubAPI {
 
             if (!response.ok) {
                 const errorData = await response.json();
+                console.error('GitHub API error response:', errorData);
                 if (response.status === 409) {
                     // Conflict - someone else updated the file
                     throw new Error('CONFLICT');
                 }
-                throw new Error(`GitHub commit failed: ${response.status} ${errorData.message}`);
+                throw new Error(`GitHub commit failed: ${response.status} ${errorData.message || response.statusText}`);
             }
 
             const result = await response.json();
@@ -194,6 +242,7 @@ class GitHubAPI {
             // Save to local storage as backup
             this.saveLocalData(data);
             
+            console.log('GitHub commit successful');
             return { success: true, commit: result.commit };
         } catch (error) {
             console.error('Error committing to GitHub:', error);
@@ -257,6 +306,11 @@ class GitHubAPI {
     // Handle errors
     handleError(error) {
         const errorMessage = error.message || error.toString();
+        console.error('GitHub API Error Details:', {
+            message: errorMessage,
+            stack: error.stack,
+            name: error.name
+        });
         
         if (errorMessage.includes('401')) {
             this.showError('Invalid GitHub token. Please reconfigure in Settings.');
@@ -267,6 +321,10 @@ class GitHubAPI {
             this.showError('Conflict detected. Someone else modified the data. Refreshing...');
         } else if (errorMessage.includes('rate limit')) {
             this.showError('GitHub API rate limit exceeded. Try again later.');
+        } else if (errorMessage.includes('btoa')) {
+            this.showError('Encoding error with special characters. Trying fallback method...');
+        } else if (errorMessage.includes('fetch')) {
+            this.showError('Network error. Check your internet connection.');
         } else {
             this.showError(`GitHub sync failed: ${errorMessage}. Changes saved locally.`);
         }
