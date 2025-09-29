@@ -215,58 +215,78 @@ function renderKanban() {
     
     // Clear all columns
     const columns = [
-        'planning-todo', 'planning-in-progress', 'planning-done',
-        'actual-todo', 'actual-in-progress', 'actual-done'
+        'today-planned', 'in-progress-planned', 'in-progress-actual', 'done-actual'
     ];
     
     columns.forEach(col => {
-        document.getElementById(col).innerHTML = '';
+        const element = document.getElementById(col);
+        if (element) element.innerHTML = '';
     });
     
     // Render tasks
     appData.tasks.forEach(task => {
         if (currentFilter !== 'all' && task.projectName !== currentFilter) return;
         
-        // Create cards for planning and actual
-        const planningCard = createTaskCard(task, 'planning');
-        const actualCard = createTaskCard(task, 'actual');
+        // Determine which column to show the task in based on status
+        let columnId = null;
         
-        // Add to planning column
-        const planningCol = document.getElementById(`planning-${task.planningStatus}`);
-        if (planningCol) planningCol.appendChild(planningCard);
+        // Logic for new 4-column layout
+        if (task.planningStatus === 'today') {
+            columnId = 'today-planned';
+        } else if (task.planningStatus === 'in-progress') {
+            columnId = 'in-progress-planned';
+        } else if (task.actualStatus === 'in-progress') {
+            columnId = 'in-progress-actual';
+        } else if (task.actualStatus === 'done') {
+            columnId = 'done-actual';
+        }
         
-        // Add to actual column
-        const actualCol = document.getElementById(`actual-${task.actualStatus}`);
-        if (actualCol) actualCol.appendChild(actualCard);
+        if (columnId) {
+            const card = createTaskCard(task, columnId);
+            const column = document.getElementById(columnId);
+            if (column) column.appendChild(card);
+        }
     });
 }
 
 // Create task card element
-function createTaskCard(task, type) {
+function createTaskCard(task, columnType) {
     const card = document.createElement('div');
     card.className = 'task-card';
     card.dataset.taskId = task.id;
-    card.dataset.type = type;
+    card.dataset.columnType = columnType;
     
     const status = calculateTaskStatus(task);
+    const isActualProgress = columnType === 'in-progress-actual';
+    const isNoEdit = columnType === 'in-progress-planned';
+    
+    // Format date ranges
+    const planDateRange = formatDateRange(task.planDateFrom, task.planDateTo);
+    const actualDateRange = task.actualDateFrom ? formatDateRange(task.actualDateFrom, task.actualDateTo) : '';
     
     card.innerHTML = `
         <div class="task-card-header">
             <span class="task-status-icon ${status}"></span>
             <span class="task-name">${escapeHtml(task.taskName)}</span>
         </div>
+        ${isActualProgress ? '<div class="task-badge">Actual Progress</div>' : ''}
         <div class="task-project">Project: ${task.projectName}</div>
         <div class="task-assignee">Assignee: ${getUserName(task.assignee)}</div>
         <div class="task-dates">
-            Plan: ${formatDate(task.planDate)}
-            ${task.actualDate ? `<br>Actual: ${formatDate(task.actualDate)}` : ''}
+            Plan: ${planDateRange}
+            ${actualDateRange ? `<br>Actual: ${actualDateRange}` : ''}
         </div>
         <div class="task-actions">
             <button class="btn btn-secondary" onclick="viewTaskHistory('${task.id}')">History</button>
-            ${currentUser && currentUser.role === 'Tech Lead' ? 
+            ${currentUser && currentUser.role === 'Tech Lead' && !isNoEdit ? 
                 `<button class="btn btn-primary task-edit-btn" onclick="openEditTaskModal('${task.id}')">Edit</button>` : ''}
         </div>
     `;
+    
+    // Add no-edit class if it's the planned in-progress column
+    if (isNoEdit) {
+        card.classList.add('no-edit');
+    }
     
     return card;
 }
@@ -278,11 +298,11 @@ function calculateTaskStatus(task) {
     }
     
     const now = new Date();
-    const planDate = new Date(task.planDate);
+    const planDateTo = new Date(task.planDateTo || task.planDate);
     
-    if (task.actualDate) {
-        const actualDate = new Date(task.actualDate);
-        const daysDiff = Math.floor((actualDate - planDate) / (1000 * 60 * 60 * 24));
+    if (task.actualDateTo || task.actualDate) {
+        const actualDate = new Date(task.actualDateTo || task.actualDate);
+        const daysDiff = Math.floor((actualDate - planDateTo) / (1000 * 60 * 60 * 24));
         
         if (daysDiff <= 0) return 'green';
         if (daysDiff <= 3) return 'yellow';
@@ -290,13 +310,25 @@ function calculateTaskStatus(task) {
     }
     
     // Not completed yet
-    if (planDate < now && task.actualStatus !== 'done') {
-        const daysDiff = Math.floor((now - planDate) / (1000 * 60 * 60 * 24));
+    if (planDateTo < now && task.actualStatus !== 'done') {
+        const daysDiff = Math.floor((now - planDateTo) / (1000 * 60 * 60 * 24));
         if (daysDiff <= 3) return 'yellow';
         return 'red';
     }
     
     return 'green';
+}
+
+// Format date range
+function formatDateRange(fromDate, toDate) {
+    if (!fromDate) return '';
+    
+    const from = formatDate(fromDate);
+    if (!toDate || fromDate === toDate) {
+        return from;
+    }
+    
+    return `${from} - ${formatDate(toDate)}`;
 }
 
 // Task Management
@@ -321,8 +353,10 @@ function clearTaskForm() {
     document.getElementById('taskName').value = '';
     document.getElementById('taskDescription').value = '';
     document.getElementById('taskAssignee').value = '';
-    document.getElementById('taskPlanDate').value = '';
-    document.getElementById('taskPlanningStatus').value = 'todo';
+    document.getElementById('taskPlanDateFrom').value = '';
+    document.getElementById('taskPlanDateTo').value = '';
+    document.getElementById('taskPlanningStatus').value = 'today';
+    document.getElementById('taskActualStatus').value = 'today';
     document.getElementById('taskPriority').value = 'normal';
     document.getElementById('taskReason').value = '';
 }
@@ -339,10 +373,12 @@ async function createTask() {
         taskName: document.getElementById('taskName').value,
         description: document.getElementById('taskDescription').value,
         assignee: parseInt(document.getElementById('taskAssignee').value),
-        planDate: document.getElementById('taskPlanDate').value,
-        actualDate: null,
+        planDateFrom: document.getElementById('taskPlanDateFrom').value,
+        planDateTo: document.getElementById('taskPlanDateTo').value,
+        actualDateFrom: null,
+        actualDateTo: null,
         planningStatus: document.getElementById('taskPlanningStatus').value,
-        actualStatus: document.getElementById('taskPlanningStatus').value,
+        actualStatus: document.getElementById('taskActualStatus').value,
         priority: document.getElementById('taskPriority').value,
         createdAt: new Date().toISOString(),
         createdBy: currentUser.id,
@@ -352,7 +388,7 @@ async function createTask() {
     const reason = document.getElementById('taskReason').value;
     
     // Validate
-    if (!taskData.projectName || !taskData.taskName || !taskData.assignee || !taskData.planDate || !reason) {
+    if (!taskData.projectName || !taskData.taskName || !taskData.assignee || !taskData.planDateFrom || !taskData.planDateTo || !reason) {
         showToast('Please fill all required fields', 'error');
         return;
     }
@@ -390,8 +426,10 @@ function openEditTaskModal(taskId) {
     document.getElementById('editTaskProject').value = task.projectName;
     document.getElementById('editTaskName').value = task.taskName;
     document.getElementById('editTaskDescription').value = task.description;
-    document.getElementById('editTaskPlanDate').value = task.planDate;
-    document.getElementById('editTaskActualDate').value = task.actualDate || '';
+    document.getElementById('editTaskPlanDateFrom').value = task.planDateFrom || task.planDate || '';
+    document.getElementById('editTaskPlanDateTo').value = task.planDateTo || task.planDate || '';
+    document.getElementById('editTaskActualDateFrom').value = task.actualDateFrom || task.actualDate || '';
+    document.getElementById('editTaskActualDateTo').value = task.actualDateTo || task.actualDate || '';
     document.getElementById('editTaskPlanningStatus').value = task.planningStatus;
     document.getElementById('editTaskActualStatus').value = task.actualStatus;
     document.getElementById('editTaskPriority').value = task.priority;
@@ -429,8 +467,10 @@ async function updateTask() {
         { id: 'editTaskName', field: 'taskName', label: 'Task Name' },
         { id: 'editTaskDescription', field: 'description', label: 'Description' },
         { id: 'editTaskAssignee', field: 'assignee', label: 'Assignee', type: 'number' },
-        { id: 'editTaskPlanDate', field: 'planDate', label: 'Plan Date' },
-        { id: 'editTaskActualDate', field: 'actualDate', label: 'Actual Date' },
+        { id: 'editTaskPlanDateFrom', field: 'planDateFrom', label: 'Plan Date From' },
+        { id: 'editTaskPlanDateTo', field: 'planDateTo', label: 'Plan Date To' },
+        { id: 'editTaskActualDateFrom', field: 'actualDateFrom', label: 'Actual Date From' },
+        { id: 'editTaskActualDateTo', field: 'actualDateTo', label: 'Actual Date To' },
         { id: 'editTaskPlanningStatus', field: 'planningStatus', label: 'Planning Status' },
         { id: 'editTaskActualStatus', field: 'actualStatus', label: 'Actual Status' },
         { id: 'editTaskPriority', field: 'priority', label: 'Priority' }

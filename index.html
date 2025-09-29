@@ -115,37 +115,23 @@
 
     <!-- Kanban Board View -->
     <div id="kanbanView" class="view">
-        <div class="kanban-header">
-            <h2>Planning Board</h2>
-            <h2>Actual Progress</h2>
-        </div>
         <div class="kanban-container">
-            <div class="kanban-board planning-board">
-                <div class="kanban-column" data-status="todo" data-type="planning">
-                    <div class="column-header">To Do (Planned)</div>
-                    <div class="column-content" id="planning-todo"></div>
+            <div class="kanban-board">
+                <div class="kanban-column" data-status="today" data-type="planned">
+                    <div class="column-header">Today (Planned)</div>
+                    <div class="column-content" id="today-planned"></div>
                 </div>
-                <div class="kanban-column" data-status="in-progress" data-type="planning">
+                <div class="kanban-column no-edit" data-status="in-progress" data-type="planned">
                     <div class="column-header">In Progress (Planned)</div>
-                    <div class="column-content" id="planning-in-progress"></div>
+                    <div class="column-content" id="in-progress-planned"></div>
                 </div>
-                <div class="kanban-column" data-status="done" data-type="planning">
-                    <div class="column-header">Done (Planned)</div>
-                    <div class="column-content" id="planning-done"></div>
-                </div>
-            </div>
-            <div class="kanban-board actual-board">
-                <div class="kanban-column" data-status="todo" data-type="actual">
-                    <div class="column-header">To Do (Actual)</div>
-                    <div class="column-content" id="actual-todo"></div>
-                </div>
-                <div class="kanban-column" data-status="in-progress" data-type="actual">
-                    <div class="column-header">In Progress (Actual)</div>
-                    <div class="column-content" id="actual-in-progress"></div>
+                <div class="kanban-column editable" data-status="in-progress" data-type="actual">
+                    <div class="column-header">In Progress (Actual Progress)</div>
+                    <div class="column-content" id="in-progress-actual"></div>
                 </div>
                 <div class="kanban-column" data-status="done" data-type="actual">
                     <div class="column-header">Done (Actual)</div>
-                    <div class="column-content" id="actual-done"></div>
+                    <div class="column-content" id="done-actual"></div>
                 </div>
             </div>
         </div>
@@ -254,13 +240,25 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Plan Date:</label>
-                    <input type="date" id="taskPlanDate" required>
+                    <label>Plan Date Range:</label>
+                    <div class="date-range">
+                        <input type="date" id="taskPlanDateFrom" required placeholder="From">
+                        <span>to</span>
+                        <input type="date" id="taskPlanDateTo" required placeholder="To">
+                    </div>
                 </div>
                 <div class="form-group">
                     <label>Planning Status:</label>
                     <select id="taskPlanningStatus">
-                        <option value="todo">To Do</option>
+                        <option value="today">Today</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="done">Done</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Actual Status:</label>
+                    <select id="taskActualStatus">
+                        <option value="today">Today</option>
                         <option value="in-progress">In Progress</option>
                         <option value="done">Done</option>
                     </select>
@@ -318,17 +316,25 @@
                     <select id="editTaskAssignee"></select>
                 </div>
                 <div class="form-group">
-                    <label>Plan Date:</label>
-                    <input type="date" id="editTaskPlanDate">
+                    <label>Plan Date Range:</label>
+                    <div class="date-range">
+                        <input type="date" id="editTaskPlanDateFrom" placeholder="From">
+                        <span>to</span>
+                        <input type="date" id="editTaskPlanDateTo" placeholder="To">
+                    </div>
                 </div>
                 <div class="form-group">
-                    <label>Actual Date:</label>
-                    <input type="date" id="editTaskActualDate">
+                    <label>Actual Date Range:</label>
+                    <div class="date-range">
+                        <input type="date" id="editTaskActualDateFrom" placeholder="From">
+                        <span>to</span>
+                        <input type="date" id="editTaskActualDateTo" placeholder="To">
+                    </div>
                 </div>
                 <div class="form-group">
                     <label>Planning Status:</label>
                     <select id="editTaskPlanningStatus">
-                        <option value="todo">To Do</option>
+                        <option value="today">Today</option>
                         <option value="in-progress">In Progress</option>
                         <option value="done">Done</option>
                     </select>
@@ -336,7 +342,7 @@
                 <div class="form-group">
                     <label>Actual Status:</label>
                     <select id="editTaskActualStatus">
-                        <option value="todo">To Do</option>
+                        <option value="today">Today</option>
                         <option value="in-progress">In Progress</option>
                         <option value="done">Done</option>
                     </select>
