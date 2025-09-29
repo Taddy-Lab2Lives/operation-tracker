@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "lastUpdated": "2025-09-29T08:04:17.049Z",
+  "lastUpdated": "2025-09-29T08:04:40.143Z",
   "users": [
     {
       "id": 1,
@@ -92,16 +92,20 @@
       "id": "task-004",
       "projectName": "Wincommerce",
       "taskName": "Soạn dự thảo yêu cầu sử dụng dịch vụ lắp đặt 30 CH WCM",
-      "description": "",
+      "description": null,
       "assignee": 1,
       "planDate": "2025-09-29",
       "actualDate": null,
       "planningStatus": "in-progress",
-      "actualStatus": "todo",
-      "priority": "normal",
+      "actualStatus": "delay",
+      "priority": "blocked",
       "createdAt": "2025-09-23T10:00:00Z",
       "createdBy": 1,
-      "updatedAt": "2025-09-28T14:00:00Z"
+      "updatedAt": "2025-09-29T08:04:40.143Z",
+      "planDateFrom": "2025-09-29",
+      "planDateTo": "2025-09-29",
+      "actualDateFrom": null,
+      "actualDateTo": null
     },
     {
       "id": "task-005",
@@ -417,6 +421,93 @@
         "field": "actualStatus",
         "oldValue": "in-progress",
         "newValue": "delay"
+      },
+      "reason": "delay"
+    },
+    {
+      "id": "1759133080143-9ikdw1ksh",
+      "taskId": "task-004",
+      "userId": 1,
+      "action": "updated",
+      "timestamp": "2025-09-29T08:04:40.143Z",
+      "changes": {
+        "field": "description",
+        "oldValue": "",
+        "newValue": null
+      },
+      "reason": "delay"
+    },
+    {
+      "id": "1759133080143-pnpog7bg8",
+      "taskId": "task-004",
+      "userId": 1,
+      "action": "updated",
+      "timestamp": "2025-09-29T08:04:40.143Z",
+      "changes": {
+        "field": "planDateFrom",
+        "newValue": "2025-09-29"
+      },
+      "reason": "delay"
+    },
+    {
+      "id": "1759133080143-cyy6hhu2y",
+      "taskId": "task-004",
+      "userId": 1,
+      "action": "updated",
+      "timestamp": "2025-09-29T08:04:40.143Z",
+      "changes": {
+        "field": "planDateTo",
+        "newValue": "2025-09-29"
+      },
+      "reason": "delay"
+    },
+    {
+      "id": "1759133080143-ck3qzre0e",
+      "taskId": "task-004",
+      "userId": 1,
+      "action": "updated",
+      "timestamp": "2025-09-29T08:04:40.143Z",
+      "changes": {
+        "field": "actualDateFrom",
+        "newValue": null
+      },
+      "reason": "delay"
+    },
+    {
+      "id": "1759133080143-y39bpnbaf",
+      "taskId": "task-004",
+      "userId": 1,
+      "action": "updated",
+      "timestamp": "2025-09-29T08:04:40.143Z",
+      "changes": {
+        "field": "actualDateTo",
+        "newValue": null
+      },
+      "reason": "delay"
+    },
+    {
+      "id": "1759133080143-9yv0cdbx6",
+      "taskId": "task-004",
+      "userId": 1,
+      "action": "updated",
+      "timestamp": "2025-09-29T08:04:40.143Z",
+      "changes": {
+        "field": "actualStatus",
+        "oldValue": "todo",
+        "newValue": "delay"
+      },
+      "reason": "delay"
+    },
+    {
+      "id": "1759133080143-jmn6kjtfw",
+      "taskId": "task-004",
+      "userId": 1,
+      "action": "updated",
+      "timestamp": "2025-09-29T08:04:40.143Z",
+      "changes": {
+        "field": "priority",
+        "oldValue": "normal",
+        "newValue": "blocked"
       },
       "reason": "delay"
     }
